@@ -13,7 +13,9 @@ export async function POST() {
   try {
     // Call database function that archives and clears records atomically
     const { error: rpcError } = await supabase.rpc('reset_day_archive')
-    if (rpcError) throw rpcError
+    if (rpcError) {
+      throw new Error(`RPC reset_day_archive failed: ${rpcError.message}`)
+    }
 
     // Fetch archived row for today to report count
     const today = new Date().toISOString().split('T')[0]
@@ -28,6 +30,6 @@ export async function POST() {
     return Response.json({ success: true, archived: count })
   } catch (e: any) {
     console.error('reset-day error', e)
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 })
+    return new Response(JSON.stringify({ error: e.message || 'Unknown error', stack: e.stack }), { status: 500 })
   }
 }

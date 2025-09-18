@@ -47,7 +47,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
   {/* mobile-web-app-capable is the modern, non-Apple-prefixed variant; Next.js will still emit the apple tags from metadata.appleWebApp for backward compatibility */}
   <meta name="mobile-web-app-capable" content="yes" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+  <link rel="icon" type="image/svg+xml" sizes="192x192" href="/icon-192.svg" />
+  <link rel="icon" type="image/svg+xml" sizes="512x512" href="/icon-512.svg" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
         <script

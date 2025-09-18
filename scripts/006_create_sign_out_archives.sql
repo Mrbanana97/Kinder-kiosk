@@ -43,7 +43,6 @@ begin
       'signed_back_in_at', sor.signed_back_in_at,
       'signer_name', sor.signer_name,
       'signature_data', sor.signature_data,
-      'signature_url', sor.signature_url,
       'first_name', s.first_name,
       'last_name', s.last_name,
       'class_name', c.name

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { AppIcon } from "@/components/icons"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 
@@ -258,34 +259,39 @@ export default function AdminDashboard() {
                 aria-current={activeTab === "records"}
                 variant={activeTab === "records" ? "default" : "ghost"}
                 onClick={() => handleSelectTab("records")}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left gap-2"
               >
-                📋 Sign-Out Records
+                <AppIcon name="records" size={18} className="text-current" />
+                <span>Sign-Out Records</span>
               </Button>
               <Button
                 aria-current={activeTab === "students"}
                 variant={activeTab === "students" ? "default" : "ghost"}
                 onClick={() => handleSelectTab("students")}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left gap-2"
               >
-                👥 Student Status
+                <AppIcon name="students" size={18} />
+                <span>Student Status</span>
               </Button>
               <Button
                 aria-current={activeTab === "history"}
                 variant={activeTab === "history" ? "default" : "ghost"}
                 onClick={() => handleSelectTab("history")}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left gap-2"
               >
-                📜 History
+                <AppIcon name="history" size={18} />
+                <span>History</span>
               </Button>
               <Link href="/admin/students" className="block">
-                <Button variant="ghost" className="w-full justify-start text-left">
-                  ⚙️ Manage Students
+                <Button variant="ghost" className="w-full justify-start text-left gap-2">
+                  <AppIcon name="manageStudents" size={18} />
+                  <span>Manage Students</span>
                 </Button>
               </Link>
               <Link href="/" className="block">
-                <Button variant="ghost" className="w-full justify-start text-left">
-                  🏠 Back to Kiosk
+                <Button variant="ghost" className="w-full justify-start text-left gap-2">
+                  <AppIcon name="home" size={18} />
+                  <span>Back to Kiosk</span>
                 </Button>
               </Link>
             </nav>
@@ -295,7 +301,7 @@ export default function AdminDashboard() {
         <div className="flex-1 p-6">
           <div className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>🏠 Home</span>
+              <span className="inline-flex items-center gap-1 text-gray-600"><AppIcon name="breadcrumbHome" size={14} /> Home</span>
               <span>/</span>
               <span>Dashboard</span>
               <span>/</span>
@@ -309,14 +315,18 @@ export default function AdminDashboard() {
               </div>
               <div className="flex gap-3">
                 {activeTab !== 'history' && (
-                  <Button onClick={() => setShowResetConfirm(true)} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium" variant="outline">🔄 Reset Day</Button>
+                  <Button onClick={() => setShowResetConfirm(true)} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium gap-2" variant="outline">
+                    <AppIcon name="reset" size={18} />
+                    <span>Reset Day</span>
+                  </Button>
                 )}
                 <Button
                   onClick={downloadDailyData}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium gap-2"
                   variant="outline"
                 >
-                  📥 Export
+                  <AppIcon name="export" size={18} />
+                  <span>Export</span>
                 </Button>
               </div>
             </div>
@@ -330,7 +340,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-600">Currently Signed Out</p>
                     <p className="text-2xl font-bold text-gray-900">{getCurrentlySignedOutStudents().length}</p>
                   </div>
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center"><span className="text-red-600 text-sm">👥</span></div>
+                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-600"><AppIcon name="metricSignedOut" size={18} /></div>
                 </div>
               </CardContent>
             </Card>
@@ -341,7 +351,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-600">Today's Sign-Outs</p>
                     <p className="text-2xl font-bold text-gray-900">{getTodaysRecords().length}</p>
                   </div>
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><span className="text-blue-600 text-sm">📋</span></div>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><AppIcon name="metricTodays" size={18} /></div>
                 </div>
               </CardContent>
             </Card>
@@ -352,7 +362,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-600">Total Students</p>
                     <p className="text-2xl font-bold text-gray-900">{students.length}</p>
                   </div>
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center"><span className="text-green-600 text-sm">🎓</span></div>
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><AppIcon name="metricStudents" size={18} /></div>
                 </div>
               </CardContent>
             </Card>
@@ -363,7 +373,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-600">Total Records</p>
                     <p className="text-2xl font-bold text-gray-900">{records.length}</p>
                   </div>
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center"><span className="text-purple-600 text-sm">📊</span></div>
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600"><AppIcon name="metricRecords" size={18} /></div>
                 </div>
               </CardContent>
             </Card>
