@@ -256,72 +256,25 @@ export default function StudentManagement() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        <div className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
+        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
           <div className="space-y-2">
-            <div
-              className="flex items-center space-x-2 p-2 cursor-pointer"
-              onClick={() => (window.location.href = "/")}
-            >
+            <div className="flex items-center space-x-2 p-2 cursor-pointer" onClick={() => (window.location.href = '/') }>
               <img src="/icon-192.png" alt="Kiosk Logo" className="w-8 h-8" />
               <span className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">Kiosk Admin</span>
             </div>
             <nav className="space-y-1 mt-8">
-              <Link href="/admin?tab=records" className="block">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-left"
-                >
-                  📋 Sign-Out Records
-                </Button>
-              </Link>
-              <Link href="/admin?tab=students" className="block">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-left"
-                >
-                  👥 Student Status
-                </Button>
-              </Link>
-              <Button variant="default" className="w-full justify-start text-left">
-                ⚙️ Manage Students
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => (window.location.href = "/")}
-                className="w-full justify-start text-left"
-              >
-                🏠 Back to Kiosk
-              </Button>
+              <Link href="/admin?tab=records" className="block"><Button variant="ghost" className="w-full justify-start text-left">📋 Sign-Out Records</Button></Link>
+              <Link href="/admin?tab=students" className="block"><Button variant="ghost" className="w-full justify-start text-left">👥 Student Status</Button></Link>
+              <Link href="/admin?tab=history" className="block"><Button variant="ghost" className="w-full justify-start text-left">📜 History</Button></Link>
+              <div><Button variant="default" className="w-full justify-start text-left">⚙️ Manage Students</Button></div>
+              <Link href="/" className="block"><Button variant="ghost" className="w-full justify-start text-left">🏠 Back to Kiosk</Button></Link>
             </nav>
           </div>
-        </div>
-
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>🏠 Home</span>
-              <span>/</span>
-              <span>Dashboard</span>
-              <span>/</span>
-              <span className="text-blue-600 font-medium">Manage Students</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Manage Students</h1>
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
-              {success}
-            </div>
-          )}
-
+        </aside>
+        <main className="flex-1 p-6 space-y-6">
+          <h1 className="text-2xl font-bold text-gray-900">Manage Students</h1>
+          {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
+          {success && <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">{success}</div>}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Add Single Student */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -471,7 +424,7 @@ export default function StudentManagement() {
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )

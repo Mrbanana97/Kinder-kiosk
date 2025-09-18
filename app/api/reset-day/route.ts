@@ -1,5 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server'
 
 // Helper to get start/end of local day in UTC timestamps
 function getTodayBounds() {
@@ -9,30 +8,26 @@ function getTodayBounds() {
   return { start: start.toISOString(), end: end.toISOString() }
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
+  const supabase = await createClient()
   try {
-    const supabase = await createClient()
-    const { start, end } = getTodayBounds()
+    // Call database function that archives and clears records atomically
+    const { error: rpcError } = await supabase.rpc('reset_day_archive')
+    if (rpcError) throw rpcError
 
-    // Instead of deleting records (which loses audit history), mark any currently open sign-outs today as signed back in now.
-    const { error } = await supabase
-      .from("sign_out_records")
-      .update({ signed_back_in_at: new Date().toISOString() })
-      .is("signed_back_in_at", null)
-      .gte("signed_out_at", start)
-      .lte("signed_out_at", end)
+    // Fetch archived row for today to report count
+    const today = new Date().toISOString().split('T')[0]
+    const { data: archiveRow, error: archiveErr } = await supabase
+      .from('sign_out_archives')
+      .select('data')
+      .eq('day', today)
+      .single()
+    if (archiveErr) throw archiveErr
 
-    if (error) {
-      console.error("Database error during reset:", error)
-      return NextResponse.json({ error: "Failed to reset day" }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Day reset: all currently signed-out students have been marked back in.",
-    })
-  } catch (error) {
-    console.error("Reset day error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const count = Array.isArray(archiveRow?.data) ? archiveRow.data.length : (archiveRow?.data?.records?.length || 0)
+    return Response.json({ success: true, archived: count })
+  } catch (e: any) {
+    console.error('reset-day error', e)
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "Kindergarten Sign-Out Kiosk",
-  "short_name": "Kiosk",
+  "short_name": "KinderKiosk",
   "description": "Digital sign-out system for kindergarten students",
   "start_url": "/",
   "display": "fullscreen",

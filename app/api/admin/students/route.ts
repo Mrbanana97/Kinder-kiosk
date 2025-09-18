@@ -15,6 +15,7 @@ export async function GET() {
         sign_out_records (
           id,
           signed_out_at,
+          signed_back_in_at,
           signer_name
         )
       `)

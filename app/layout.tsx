@@ -2,7 +2,6 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
 import PasswordProtection from "@/components/password-protection"
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Kiosk",
+    title: "Kindergarten Kiosk",
   },
 }
 
@@ -76,7 +75,6 @@ export default function RootLayout({
         <PasswordProtection>
           <Suspense fallback={null}>{children}</Suspense>
         </PasswordProtection>
-        <Analytics />
       </body>
     </html>
   )

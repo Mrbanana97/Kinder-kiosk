@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "kindergarten-sign-out-kiosk",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -38,8 +38,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
-    "@vercel/analytics": "latest",
+  "@supabase/supabase-js": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -12,6 +12,11 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png'
 ];
 
+// Backward compatibility: some old builds may reference PRENCACHE_URLS (misspelled)
+// Expose that name to avoid ReferenceError until clients refresh.
+// @ts-ignore
+self.PRENCACHE_URLS = PRECACHE_URLS;
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRENCACHE_URLS).catch(() => {}))
