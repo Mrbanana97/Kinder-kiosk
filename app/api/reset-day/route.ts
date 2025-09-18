@@ -17,16 +17,17 @@ export async function POST() {
       throw new Error(`RPC reset_day_archive failed: ${rpcError.message}`)
     }
 
-    // Fetch archived row for today to report count
+    // Fetch archived row for today to report count (supports array or object formats)
     const today = new Date().toISOString().split('T')[0]
     const { data: archiveRow, error: archiveErr } = await supabase
       .from('sign_out_archives')
       .select('data')
       .eq('day', today)
-      .single()
+      .maybeSingle()
     if (archiveErr) throw archiveErr
-
-    const count = Array.isArray(archiveRow?.data) ? archiveRow.data.length : (archiveRow?.data?.records?.length || 0)
+    const count = archiveRow
+      ? (Array.isArray((archiveRow as any).data) ? (archiveRow as any).data.length : ((archiveRow as any).data?.records?.length || 0))
+      : 0
     return Response.json({ success: true, archived: count })
   } catch (e: any) {
     console.error('reset-day error', e)

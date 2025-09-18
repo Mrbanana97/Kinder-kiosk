@@ -12,7 +12,9 @@ export default async function HistoryDayPage({ params }: { params: { day: string
   if (error || !data) {
     return <div className="p-8">Archive not found.</div>
   }
-  const rows: ArchiveRow[] = data.data || []
+  const rows: ArchiveRow[] = Array.isArray(data.data)
+    ? (data.data as any)
+    : (data.data?.records || [])
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4">History for {data.day}</h1>
@@ -34,7 +36,9 @@ export default async function HistoryDayPage({ params }: { params: { day: string
                 <td className="p-2">{r.student?.class_id || '—'}</td>
                 <td className="p-2">{new Date(r.signed_out_at).toLocaleString()}</td>
                 <td className="p-2">{r.signed_back_in_at ? new Date(r.signed_back_in_at).toLocaleString() : '—'}</td>
-                <td className="p-2">{r.signature_url ? <img src={r.signature_url} alt="sig" className="h-8 object-contain border rounded" /> : '—'}</td>
+                <td className="p-2">{(r as any).signature_url || (r as any).signature_data ? (
+                  <img src={(r as any).signature_url || (r as any).signature_data} alt="sig" className="h-8 object-contain border rounded" />
+                ) : '—'}</td>
               </tr>
             ))}
             {!rows.length && (
