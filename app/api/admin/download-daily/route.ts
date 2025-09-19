@@ -38,9 +38,11 @@ export async function GET() {
     // Convert to CSV format
     const csvHeaders = ["Student Name", "Class", "Signed Out By", "Sign-Out Time"]
 
-    const csvRows = records.map((record: any) => [
-      `${record.students.first_name} ${record.students.last_name}`,
-      record.students.classes.name,
+    const safeRecords = records ?? []
+
+    const csvRows = safeRecords.map((record: any) => [
+      `${record.students?.first_name ?? ""} ${record.students?.last_name ?? ""}`.trim(),
+      record.students?.classes?.name ?? "",
       record.signer_name,
       new Date(record.signed_out_at).toLocaleString(),
     ])
