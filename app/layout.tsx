@@ -1,17 +1,18 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import { Suspense } from "react"
 import PasswordProtection from "@/components/password-protection"
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-geist-sans" })
 
 export const metadata: Metadata = {
   title: "Kindergarten Sign-Out Kiosk",
   description: "Digital sign-out system for kindergarten students",
   generator: "v0.app",
   manifest: "/manifest.json",
-  themeColor: "#ffffff",
   icons: {
     icon: [
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -33,6 +34,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#ffffff",
 }
 
 export default function RootLayout({
@@ -73,7 +75,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${jakarta.variable} ${GeistMono.variable}`}>
         <PasswordProtection>
           <Suspense fallback={null}>{children}</Suspense>
         </PasswordProtection>

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
+import { AppIcon } from "@/components/icons"
 import { ALLOWED_CLASS_NAMES } from "@/lib/constants"
 
 interface Class {
@@ -33,6 +35,12 @@ export default function StudentManagement() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
 
   const supabase = createClient()
+
+  const navLinks = [
+    { id: 'records' as const, href: '/admin?tab=records', icon: 'records' as const, label: 'Records' },
+    { id: 'students' as const, href: '/admin?tab=students', icon: 'students' as const, label: 'Students' },
+    { id: 'history' as const, href: '/admin?tab=history', icon: 'history' as const, label: 'History' },
+  ]
 
   useEffect(() => {
     fetchClasses()
@@ -253,179 +261,251 @@ export default function StudentManagement() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 p-2 cursor-pointer" onClick={() => (window.location.href = '/') }>
-              <img src="/icon-192.png" alt="Kiosk Logo" className="w-8 h-8" />
-              <span className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">Kiosk Admin</span>
-            </div>
-            <nav className="space-y-1 mt-8">
-              <Link href="/admin?tab=records" className="block"><Button variant="ghost" className="w-full justify-start text-left">📋 Sign-Out Records</Button></Link>
-              <Link href="/admin?tab=students" className="block"><Button variant="ghost" className="w-full justify-start text-left">👥 Student Status</Button></Link>
-              <Link href="/admin?tab=history" className="block"><Button variant="ghost" className="w-full justify-start text-left">📜 History</Button></Link>
-              <div><Button variant="default" className="w-full justify-start text-left">⚙️ Manage Students</Button></div>
-              <Link href="/" className="block"><Button variant="ghost" className="w-full justify-start text-left">🏠 Back to Kiosk</Button></Link>
-            </nav>
-          </div>
-        </aside>
-        <main className="flex-1 p-6 space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900">Manage Students</h1>
-          {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
-          {success && <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">{success}</div>}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Add Single Student */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Add Single Student</h3>
-                <p className="text-sm text-gray-600 mt-1">Add a new student to the system</p>
-              </div>
-              <div className="p-6 space-y-4">
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-                <select
-                  value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">Select Class</option>
-                  {classes
-                    .filter((c) => ALLOWED_CLASS_NAMES.includes(c.name.toUpperCase() as any))
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                </select>
-                <Button
-                  onClick={handleAddSingleStudent}
-                  disabled={loading}
-                  className="w-full h-10 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg"
-                >
-                  {loading ? "Adding..." : "Add Student"}
-                </Button>
-              </div>
-            </div>
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const activeTab = (() => {
+    if (pathname === '/admin/students') return 'students'
+    const tabParam = searchParams?.get('tab')
+    if (tabParam === 'students' || tabParam === 'history') return tabParam
+    return 'records'
+  })()
 
-            {/* CSV Upload */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">CSV Upload</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Format: Last name, First name, class, subclass (one per line)
-                  <br />
-                  Example: Sturn, Ava, K, B (creates class "KB")
-                  <br />
-                  <span className="text-xs text-orange-600">Note: Class names are limited to 10 characters</span>
-                </p>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="space-y-2">
-                  <input
-                    type="file"
-                    accept=".csv,.txt"
-                    onChange={handleFileSelect}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-                  {csvFile && (
-                    <p className="text-sm text-green-600">
-                      Selected: {csvFile.name}
-                    </p>
-                  )}
+  return (
+    <div className="min-h-screen px-6 py-10 md:px-10 lg:px-16 background-sky-radial">
+      <div className="mx-auto flex max-w-[1300px] flex-col gap-8 lg:flex-row">
+        <aside className="soft-card hidden w-full max-w-xs flex-col gap-4 rounded-[28px] px-5 py-6 sm:px-6 sm:py-8 lg:sticky lg:top-10 lg:flex lg:h-fit lg:w-64 lg:gap-6 lg:self-start">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => (window.location.href = '/')}
+              aria-label="Back to kiosk"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.32)] transition hover:scale-[1.03]"
+            >
+              <AppIcon name="breadcrumbHome" size={18} />
+            </button>
+            <div className="text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/60">Back</p>
+              <button
+                type="button"
+                onClick={() => (window.location.href = '/')}
+                className="text-sm font-semibold text-slate-700 hover:text-primary"
+              >
+                Return to kiosk
+              </button>
+            </div>
+          </div>
+
+          <nav className="mt-6 flex w-full flex-col gap-2 rounded-[24px] border border-slate-200 bg-white/80 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+            {navLinks.map((link) => {
+              const isActive = activeTab === link.id
+              return (
+                <Link
+                  key={link.id}
+                  href={link.href}
+                  aria-label={link.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex w-full items-center gap-4 rounded-[20px] px-4 py-3 text-sm font-semibold transition-all ${
+                    isActive
+                      ? 'bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.22)]'
+                      : 'bg-white/70 text-slate-500 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                >
+                  <AppIcon name={link.icon} size={18} />
+                  <span className="text-sm">{link.label}</span>
+                </Link>
+              )
+            })}
+          </nav>
+
+          <Link
+            href="/admin/students"
+            aria-label="Manage students"
+            aria-current="page"
+            className="mt-4 flex w-full items-center gap-3 rounded-[20px] bg-primary px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(54,92,255,0.22)]"
+          >
+            <AppIcon name="manageStudents" size={18} />
+            Manage students
+          </Link>
+        </aside>
+
+        <main className="flex flex-1 flex-col gap-8">
+            <header className="soft-card rounded-[32px] px-8 py-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary/60">Admin · Manage Students</p>
+                  <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Roster Management</h1>
+                  <p className="mt-2 text-sm text-slate-500">Add individual students, import rosters, and curate the current class list.</p>
                 </div>
                 <Button
-                  onClick={handleCsvUpload}
-                  disabled={loading || !csvFile}
-                  className="w-full h-10 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg"
+                  asChild
+                  className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(54,92,255,0.2)] transition hover:bg-primary/90"
                 >
-                  {loading ? "Uploading..." : "Upload Students"}
+                  <Link href="/admin?tab=records">Back to Dashboard</Link>
                 </Button>
               </div>
-            </div>
-          </div>
+            </header>
 
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">All Students ({students.length})</h3>
-                <p className="text-sm text-gray-600 mt-1">Complete list of enrolled students</p>
+            {error && (
+              <div className="rounded-[24px] border border-rose-100 bg-rose-50/80 px-6 py-4 text-sm text-rose-600 shadow-[0_10px_24px_rgba(244,63,94,0.1)]">
+                {error}
               </div>
-            </div>
-            <div className="overflow-x-auto">
-              {loading ? (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Student</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Class</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Created</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {[...Array(6)].map((_, i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-40" /></td>
-                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
-                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-                        <td className="px-6 py-3"><div className="h-8 bg-gray-200 rounded w-16" /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : students.length === 0 ? (
-                <div className="text-center py-12 text-sm text-gray-500">No students found</div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Student</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Class</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Created</th>
-                      <th className="text-left px-6 py-3 font-medium text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {students.map((student) => (
-                      <tr key={student.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-3 text-gray-900 font-medium">{student.first_name} {student.last_name}</td>
-                        <td className="px-6 py-3 text-gray-600">{(student as any).classes?.name || 'Unknown'}</td>
-                        <td className="px-6 py-3 text-gray-500">
-                          {new Date(student.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-3">
-                          <Button
-                            onClick={() => handleDeleteStudent(student.id, `${student.first_name} ${student.last_name}`)}
-                            className="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded"
-                            size="sm"
-                          >
-                            Delete
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </main>
+            )}
+            {success && (
+              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/80 px-6 py-4 text-sm text-emerald-600 shadow-[0_10px_24px_rgba(16,185,129,0.1)]">
+                {success}
+              </div>
+            )}
+
+            <section className="grid gap-6 lg:grid-cols-2">
+              <div className="soft-card rounded-[28px] p-8">
+                <h3 className="text-xl font-semibold text-slate-900">Add Single Student</h3>
+                <p className="mt-2 text-sm text-slate-500">Perfect for quick additions or last-minute enrollments.</p>
+                <div className="mt-6 space-y-4">
+                  <input
+                    type="text"
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-inner focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-inner focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Select class</option>
+                    {classes
+                      .filter((c) => ALLOWED_CLASS_NAMES.includes(c.name.toUpperCase() as any))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                  </select>
+                  <Button
+                    onClick={handleAddSingleStudent}
+                    disabled={loading}
+                    className="h-12 w-full rounded-2xl bg-primary text-sm font-semibold text-white shadow-[0_18px_32px_rgba(54,92,255,0.28)] hover:bg-primary/90 disabled:bg-slate-300 disabled:shadow-none"
+                  >
+                    {loading ? 'Adding…' : 'Add Student'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="soft-card rounded-[28px] p-8">
+                <h3 className="text-xl font-semibold text-slate-900">Bulk Upload via CSV</h3>
+                <p className="mt-2 text-sm text-slate-500">Upload a spreadsheet export to add multiple students at once.</p>
+                <div className="mt-6 space-y-4">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileSelect}
+                    className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                  />
+                  <Button
+                    onClick={handleCsvUpload}
+                    disabled={loading || !csvFile}
+                    className="h-12 w-full rounded-2xl bg-emerald-500 text-sm font-semibold text-white shadow-[0_18px_32px_rgba(16,185,129,0.25)] hover:bg-emerald-500/90 disabled:bg-slate-300 disabled:shadow-none"
+                  >
+                    {loading ? 'Uploading…' : 'Upload CSV'}
+                  </Button>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 text-sm text-slate-600">
+                    <p className="font-semibold text-slate-700">CSV format tips</p>
+                    <ul className="mt-2 space-y-2">
+                      <li>Header: <code className="rounded bg-white px-2 py-1">Last Name, First Name, Class, Subclass</code></li>
+                      <li>Row example: <code className="rounded bg-white px-2 py-1">Doe, Jane, K, B</code></li>
+                      <li>Allowed classes: {ALLOWED_CLASS_NAMES.join(', ')}.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="soft-card rounded-[32px] p-8">
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900">Current Students</h3>
+                  <p className="text-sm text-slate-500">{students.length} active records</p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={fetchStudents}
+                  className="pill-button border border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary"
+                >
+                  Refresh list
+                </Button>
+              </div>
+
+              <div className="overflow-hidden rounded-[24px] border border-slate-200">
+                <div className="overflow-x-auto">
+                  {loading ? (
+                    <table className="min-w-full text-sm text-slate-600">
+                      <thead className="bg-slate-50/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <tr>
+                          <th className="px-6 py-4 text-left">Student</th>
+                          <th className="px-6 py-4 text-left">Class</th>
+                          <th className="px-6 py-4 text-left">Created</th>
+                          <th className="px-6 py-4 text-left">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <tr key={idx} className="animate-pulse">
+                            {Array.from({ length: 4 }).map((__, cIdx) => (
+                              <td key={cIdx} className="px-6 py-4">
+                                <div className="h-4 w-full rounded-full bg-slate-100" />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : students.length === 0 ? (
+                    <div className="px-6 py-12 text-center text-slate-500">No students found. Add a student to get started.</div>
+                  ) : (
+                    <table className="min-w-full text-sm text-slate-600">
+                      <thead className="bg-slate-50/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <tr>
+                          <th className="px-6 py-4 text-left">Student</th>
+                          <th className="px-6 py-4 text-left">Class</th>
+                          <th className="px-6 py-4 text-left">Created</th>
+                          <th className="px-6 py-4 text-left">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {students.map((student) => (
+                          <tr key={student.id} className="transition-colors hover:bg-primary/5">
+                            <td className="px-6 py-4 font-medium text-slate-900">{student.first_name} {student.last_name}</td>
+                            <td className="px-6 py-4 text-slate-500">{(student as any).classes?.name || 'Unknown'}</td>
+                            <td className="px-6 py-4 text-slate-500">{new Date(student.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4">
+                              <Button
+                                onClick={() => handleDeleteStudent(student.id, `${student.first_name} ${student.last_name}`)}
+                                className="rounded-full bg-rose-500 px-4 py-1 text-xs font-semibold text-white shadow-[0_12px_24px_rgba(244,63,94,0.18)] hover:bg-rose-500/90"
+                                size="sm"
+                              >
+                                Delete
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
       </div>
-    </div>
   )
+
 }

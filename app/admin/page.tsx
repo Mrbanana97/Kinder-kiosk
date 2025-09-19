@@ -35,6 +35,12 @@ interface HistoryDay {
 
 const TABS = ['records','students','history'] as const
 
+const NAVIGATION = [
+  { id: 'records' as const, label: 'Records', icon: 'records' as const },
+  { id: 'students' as const, label: 'Students', icon: 'students' as const },
+  { id: 'history' as const, label: 'History', icon: 'history' as const },
+]
+
 export default function AdminDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -219,7 +225,7 @@ export default function AdminDashboard() {
 
   if (loading && records.length === 0 && students.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen background-sky-radial flex items-center justify-center">
         <div className="text-xl font-medium text-gray-600">Loading...</div>
       </div>
     )
@@ -231,10 +237,16 @@ export default function AdminDashboard() {
         {loadingHistory && <div className="text-sm text-gray-500">Loading history…</div>}
         {!loadingHistory && !historyDays.length && <div className="text-sm text-gray-500">No archives yet.</div>}
         <ul className="divide-y border rounded bg-white">
-          {historyDays.map(d => (
+          {historyDays.map((d) => (
             <li key={d.day} className="flex items-center justify-between px-4 py-2">
-              <span>{d.day}</span>
-              <a className="text-blue-600 hover:underline text-sm" href={`/admin/history/${d.day}`}>View</a>
+              <span className="text-sm font-medium text-slate-600">{d.day}</span>
+              <a
+                className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary shadow-[0_6px_12px_rgba(54,92,255,0.18)] transition hover:border-primary/40 hover:bg-primary/20"
+                href={`/admin/history/${d.day}`}
+              >
+                <AppIcon name="history" size={14} />
+                View
+              </a>
             </li>
           ))}
         </ul>
@@ -242,363 +254,472 @@ export default function AdminDashboard() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <div className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
-          <div className="space-y-2">
-            <div
-              className="flex items-center space-x-2 p-2 cursor-pointer"
-              onClick={() => (window.location.href = "/")}
-            >
-              <img src="/icon-192.png" alt="Kiosk Logo" className="w-8 h-8" />
-              <span className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">Kiosk Admin</span>
-            </div>
-            <nav className="space-y-1 mt-8">
-              <Button
-                aria-current={activeTab === "records"}
-                variant={activeTab === "records" ? "default" : "ghost"}
-                onClick={() => handleSelectTab("records")}
-                className="w-full justify-start text-left gap-2"
-              >
-                <AppIcon name="records" size={18} className="text-current" />
-                <span>Sign-Out Records</span>
-              </Button>
-              <Button
-                aria-current={activeTab === "students"}
-                variant={activeTab === "students" ? "default" : "ghost"}
-                onClick={() => handleSelectTab("students")}
-                className="w-full justify-start text-left gap-2"
-              >
-                <AppIcon name="students" size={18} />
-                <span>Student Status</span>
-              </Button>
-              <Button
-                aria-current={activeTab === "history"}
-                variant={activeTab === "history" ? "default" : "ghost"}
-                onClick={() => handleSelectTab("history")}
-                className="w-full justify-start text-left gap-2"
-              >
-                <AppIcon name="history" size={18} />
-                <span>History</span>
-              </Button>
-              <Link href="/admin/students" className="block">
-                <Button variant="ghost" className="w-full justify-start text-left gap-2">
-                  <AppIcon name="manageStudents" size={18} />
-                  <span>Manage Students</span>
-                </Button>
-              </Link>
-              <Link href="/" className="block">
-                <Button variant="ghost" className="w-full justify-start text-left gap-2">
-                  <AppIcon name="home" size={18} />
-                  <span>Back to Kiosk</span>
-                </Button>
-              </Link>
-            </nav>
+  const renderRecordsSection = () => (
+    <div className="space-y-6">
+      <div className="rounded-[28px] border border-slate-200 bg-white/95 shadow-[0_22px_45px_rgba(54,92,255,0.08)]">
+        <div className="overflow-x-auto px-4 py-3 md:px-5 md:py-4">
+          <table className="min-w-full border-separate border-spacing-0 text-sm text-slate-600">
+            <thead className="bg-slate-50/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-6 py-4 text-left first:rounded-tl-[28px]">Student</th>
+                <th className="px-6 py-4 text-left">Class</th>
+                <th className="px-6 py-4 text-left">Signed By</th>
+                <th className="px-6 py-4 text-left">Signed Out</th>
+                <th className="px-6 py-4 text-left">Signed Back In</th>
+                <th className="px-6 py-4 text-left last:rounded-tr-[28px]">Signature</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loadingRecords && records.length === 0
+                ? Array.from({ length: 6 }).map((_, idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      {Array.from({ length: 6 }).map((__, cellIdx) => (
+                        <td key={cellIdx} className="px-6 py-4">
+                          <div className="h-4 w-full rounded-full bg-slate-100" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                : records.map((record) => {
+                    const studentInfo = (record as any).student || (record as any).students || null
+                    const studentName = studentInfo ? `${studentInfo.first_name} ${studentInfo.last_name}` : 'Unknown'
+                    const classLabel =
+                      (studentInfo && (studentInfo as any).classes?.name) ||
+                      (studentInfo && (studentInfo as any).class_name) ||
+                      studentInfo?.class_id ||
+                      '—'
+                    const signatureSrc = (record as any).signature_data || (record as any).signature_url || null
+                    const signedOut = formatDateTime(record.signed_out_at)
+                    const signedIn = record.signed_back_in_at ? formatDateTime(record.signed_back_in_at) : '—'
+                    return (
+                      <tr key={record.id} className="transition-colors hover:bg-primary/5">
+                        <td className="px-6 py-4 font-medium text-slate-900">{studentName}</td>
+                        <td className="px-6 py-4 text-slate-500">{classLabel}</td>
+                        <td className="px-6 py-4 text-slate-500">{record.signer_name || '—'}</td>
+                        <td className="px-6 py-4 text-slate-600">{signedOut}</td>
+                        <td className="px-6 py-4 text-slate-600">{signedIn}</td>
+                        <td className="px-6 py-4">
+                          {signatureSrc ? (
+                            <Button
+                              onClick={() => setSelectedSignature(signatureSrc)}
+                              className="rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                              variant="outline"
+                            >
+                              View
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-slate-400">None</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+            </tbody>
+          </table>
+        </div>
+        {!loadingRecords && records.length === 0 && (
+          <div className="px-5 py-8 text-center text-slate-500">No sign-outs recorded today.</div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderStudentsSection = () => (
+    <div className="space-y-6">
+      <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-[0_16px_32px_rgba(54,92,255,0.06)]">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-primary/60">Roster Filters</p>
+            <h3 className="text-lg font-semibold text-slate-900">Refine the student list</h3>
+            <p className="text-sm text-slate-500">Choose a class, status, or sort preference to tailor the roster.</p>
           </div>
+          <Button
+            variant="outline"
+            className="pill-button border border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary"
+            onClick={() => {
+              setFilterClass('ALL')
+              setFilterStatus('ALL')
+              setSortBy('name')
+            }}
+          >
+            Reset Filters
+          </Button>
         </div>
 
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span className="inline-flex items-center gap-1 text-gray-600"><AppIcon name="breadcrumbHome" size={14} /> Home</span>
-              <span>/</span>
-              <span>Dashboard</span>
-              <span>/</span>
-              <span className="text-blue-600 font-medium">{activeTab === "records" ? "Records" : activeTab === "students" ? "Students" : "History"}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {activeTab === "records" ? "Sign-Out Records" : activeTab === "students" ? "Student Status" : "History"}
-                </h1>
-              </div>
-              <div className="flex gap-3">
-                {activeTab !== 'history' && (
-                  <Button onClick={() => setShowResetConfirm(true)} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium gap-2" variant="outline">
-                    <AppIcon name="reset" size={18} />
-                    <span>Reset Day</span>
-                  </Button>
-                )}
-                <Button
-                  onClick={downloadDailyData}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium gap-2"
-                  variant="outline"
-                >
-                  <AppIcon name="export" size={18} />
-                  <span>Export</span>
-                </Button>
-              </div>
-            </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Class</label>
+            <select
+              value={filterClass}
+              onChange={(e) => setFilterClass(e.target.value)}
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All</option>
+              <option value="KA">KA</option>
+              <option value="KB">KB</option>
+              <option value="KC">KC</option>
+              <option value="KD">KD</option>
+            </select>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Currently Signed Out</p>
-                    <p className="text-2xl font-bold text-gray-900">{getCurrentlySignedOutStudents().length}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-600"><AppIcon name="metricSignedOut" size={18} /></div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Today's Sign-Outs</p>
-                    <p className="text-2xl font-bold text-gray-900">{getTodaysRecords().length}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><AppIcon name="metricTodays" size={18} /></div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Students</p>
-                    <p className="text-2xl font-bold text-gray-900">{students.length}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><AppIcon name="metricStudents" size={18} /></div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Records</p>
-                    <p className="text-2xl font-bold text-gray-900">{records.length}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600"><AppIcon name="metricRecords" size={18} /></div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">All</option>
+              <option value="Present">Present</option>
+              <option value="Signed Out">Signed Out</option>
+            </select>
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="name">Name</option>
+              <option value="class">Class</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
-          )}
-
-          {activeTab === "records" && (
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Student</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Class</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Sign-Out Time</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Sign-Back In Time</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Signature</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {loadingRecords && records.length === 0 && (
-                        [...Array(6)].map((_, i) => (
-                          <tr key={i} className="animate-pulse">
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-32" /></td>
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-28" /></td>
-                            <td className="p-4"><div className="h-8 bg-gray-200 rounded w-16" /></td>
-                          </tr>
-                        ))
-                      )}
-                      {records.map(record => {
-                        const s = record.student || record.students
-                        const hasClasses = (obj: any): obj is { classes: { name: string } } => !!obj && typeof obj === 'object' && 'classes' in obj && obj.classes && typeof obj.classes.name === 'string'
-                        const studentName = s ? `${s.first_name} ${s.last_name}` : 'Unknown'
-                        const classLabel = s?.class_id || (hasClasses(s) ? s.classes.name : '—')
-                        const signatureSrc = (record as any).signature_data || record.signature_url || null
-                        return (
-                          <tr key={record.id} className="border-b last:border-none">
-                            <td className="p-4 text-sm text-gray-700">{studentName}</td>
-                            <td className="p-4 text-sm text-gray-600">{classLabel}</td>
-                            <td className="p-4 text-sm text-gray-600">{new Date(record.signed_out_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</td>
-                            <td className="p-4 text-sm text-gray-600">{record.signed_back_in_at ? new Date(record.signed_back_in_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—'}</td>
-                            <td className="p-4">
-                              {signatureSrc ? (
-                                <div className="w-16 h-10 relative group cursor-pointer" onClick={() => setSelectedSignature(signatureSrc!)}>
-                                  <img src={signatureSrc} alt="Signature" className="object-contain w-full h-full border rounded group-hover:border-blue-500" />
-                                </div>
-                              ) : <span className="text-xs text-gray-400">None</span>}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                  {records.length === 0 && <div className="text-center py-12 text-gray-500">No records found</div>}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === "students" && (
-            <>
-              <div className="mb-4 flex flex-wrap gap-3 items-end">
-                <div className="flex flex-col">
-                  <label className="text-xs font-medium text-gray-600 mb-1">Class</label>
-                  <select value={filterClass} onChange={e=>setFilterClass(e.target.value)} className="border rounded px-2 py-1 text-sm bg-white">
-                    <option value="ALL">All</option>
-                    <option value="KA">KA</option>
-                    <option value="KB">KB</option>
-                    <option value="KC">KC</option>
-                    <option value="KD">KD</option>
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="border rounded px-2 py-1 text-sm bg-white">
-                    <option value="ALL">All</option>
-                    <option value="Present">Present</option>
-                    <option value="Signed Out">Signed Out</option>
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-xs font-medium text-gray-600 mb-1">Sort By</label>
-                  <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)} className="border rounded px-2 py-1 text-sm bg-white">
-                    <option value="name">Name</option>
-                    <option value="class">Class</option>
-                    <option value="status">Status</option>
-                  </select>
-                </div>
-                <Button variant="outline" className="h-8 px-3 text-xs" onClick={()=>{setFilterClass('ALL');setFilterStatus('ALL');setSortBy('name')}}>Reset Filters</Button>
-              </div>
-              <Card className="border border-gray-200 shadow-sm">
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                          <th className="text-left p-4 text-sm font-medium text-gray-600">Student</th>
-                          <th className="text-left p-4 text-sm font-medium text-gray-600">Class</th>
-                          <th className="text-left p-4 text-sm font-medium text-gray-600">Status</th>
-                          <th className="text-left p-4 text-sm font-medium text-gray-600">Last Sign-Out</th>
-                          <th className="text-left p-4 text-sm font-medium text-gray-600">Total Sign-Outs</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {loadingStudents && students.length === 0 && (
-                          [...Array(6)].map((_, i) => (
-                            <tr key={i} className="animate-pulse">
-                              <td className="p-4"><div className="h-4 bg-gray-200 rounded w-40" /></td>
-                              <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-                              <td className="p-4"><div className="h-4 bg-gray-200 rounded w-28" /></td>
-                              <td className="p-4"><div className="h-4 bg-gray-200 rounded w-10" /></td>
-                            </tr>
-                          ))
-                        )}
-                        {filteredStudents.map((student) => {
-                          const status = getStudentStatus(student)
-                          const todays = student.sign_out_records
-                          const lastRecord = todays[0]
-                          return (
-                            <tr key={student.id} className="hover:bg-gray-50">
-                              <td className="p-4 text-sm text-gray-900">{student.first_name} {student.last_name}</td>
-                              <td className="p-4 text-sm text-gray-600">{student.classes.name}</td>
-                              <td className="p-4">
-                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{status}</span>
-                              </td>
-                              <td className="p-4 text-sm text-gray-600">{lastRecord ? formatDateTime(lastRecord.signed_out_at) : 'Never signed out'}</td>
-                              <td className="p-4 text-sm text-gray-600">{todays.length}</td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                    {students.length === 0 && <div className="text-center py-12 text-gray-500">No students found</div>}
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {activeTab === 'history' && (
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Day</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Created</th>
-                        <th className="text-left p-4 text-sm font-medium text-gray-600">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {loadingHistory && historyDays.length === 0 && (
-                        [...Array(5)].map((_,i)=>(
-                          <tr key={i} className="animate-pulse">
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-32"/></td>
-                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-48"/></td>
-                            <td className="p-4"><div className="h-8 bg-gray-200 rounded w-20"/></td>
-                          </tr>
-                        ))
-                      )}
-                      {historyDays.map(d => (
-                        <tr key={d.day} className="hover:bg-gray-50">
-                          <td className="p-4 text-sm text-gray-900">{d.day}</td>
-                          <td className="p-4 text-sm text-gray-600">{new Date(d.created_at).toLocaleString()}</td>
-                          <td className="p-4 text-sm">
-                            <Link href={`/admin/history/${d.day}`} className="text-blue-600 hover:underline">View</Link>
-                          </td>
-                        </tr>
+      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/95 shadow-[0_22px_45px_rgba(54,92,255,0.08)]">
+        <div className="overflow-x-auto px-4 py-3 md:px-5 md:py-4">
+          <table className="min-w-full border-separate border-spacing-0 text-sm text-slate-600">
+            <thead className="bg-slate-50/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-6 py-4 text-left first:rounded-tl-[28px]">Student</th>
+                <th className="px-6 py-4 text-left">Class</th>
+                <th className="px-6 py-4 text-left">Status</th>
+                <th className="px-6 py-4 text-left">Last Signed Out</th>
+                <th className="px-6 py-4 text-left last:rounded-tr-[28px]">Today</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loadingStudents && students.length === 0
+                ? Array.from({ length: 6 }).map((_, idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      {Array.from({ length: 5 }).map((__, cellIdx) => (
+                        <td key={cellIdx} className="px-6 py-4">
+                          <div className="h-4 w-full rounded-full bg-slate-100" />
+                        </td>
                       ))}
-                    </tbody>
-                  </table>
-                  {!loadingHistory && historyDays.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">No history archives yet</div>
-                  )}
+                    </tr>
+                  ))
+                : filteredStudents.map((student) => {
+                    const status = getStudentStatus(student)
+                    const todays = student.sign_out_records
+                    const lastRecord = todays[0]
+                    return (
+                      <tr key={student.id} className="transition-colors hover:bg-primary/5">
+                        <td className="px-6 py-4 font-medium text-slate-900">{student.first_name} {student.last_name}</td>
+                        <td className="px-6 py-4 text-slate-500">{student.classes.name}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                              status === 'Present'
+                                ? 'bg-emerald-100 text-emerald-600'
+                                : 'bg-rose-100 text-rose-600'
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-500">{lastRecord ? formatDateTime(lastRecord.signed_out_at) : 'Never signed out'}</td>
+                        <td className="px-6 py-4 text-slate-500">{todays.length}</td>
+                      </tr>
+                    )
+                  })}
+            </tbody>
+          </table>
+        </div>
+        {!loadingStudents && filteredStudents.length === 0 && (
+          <div className="px-5 py-8 text-center text-slate-500">No students match the current filters.</div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderHistorySection = () => (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {loadingHistory && historyDays.length === 0
+          ? Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="h-32 animate-pulse rounded-[24px] border border-slate-200 bg-slate-100/70" />
+            ))
+          : historyDays.map((day) => (
+              <div
+                key={day.day}
+                className="rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_36px_rgba(54,92,255,0.08)] transition hover:-translate-y-1 hover:border-primary/40"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{day.day}</p>
+                    <p className="text-xs text-slate-500">Created {new Date(day.created_at).toLocaleString()}</p>
+                  </div>
+                  <Link
+                    href={`/admin/history/${day.day}`}
+                    className="pill-button border border-primary/20 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20"
+                  >
+                    View
+                  </Link>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            ))}
+      </div>
+      {!loadingHistory && historyDays.length === 0 && (
+        <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-6 py-10 text-center text-slate-500">
+          No history archives yet. Reset the day to create your first archive snapshot.
+        </div>
+      )}
+    </div>
+  )
+
+  const metricCards = [
+    {
+      label: 'Currently Signed Out',
+      value: loadingStudents ? '—' : getCurrentlySignedOutStudents().length,
+      icon: 'metricSignedOut' as const,
+      badgeBg: 'bg-rose-100/80',
+      badgeText: 'text-rose-500',
+    },
+    {
+      label: "Today's Sign-Outs",
+      value: loadingRecords ? '—' : getTodaysRecords().length,
+      icon: 'metricTodays' as const,
+      badgeBg: 'bg-blue-100/80',
+      badgeText: 'text-blue-500',
+    },
+    {
+      label: 'Total Students',
+      value: loadingStudents ? '—' : students.length,
+      icon: 'metricStudents' as const,
+      badgeBg: 'bg-emerald-100/80',
+      badgeText: 'text-emerald-600',
+    },
+    {
+      label: 'History Days',
+      value: loadingHistory ? '—' : historyDays.length,
+      icon: 'metricRecords' as const,
+      badgeBg: 'bg-purple-100/80',
+      badgeText: 'text-purple-600',
+    },
+  ]
+
+  const activeNav = NAVIGATION.find((item) => item.id === activeTab)
+
+  return (
+    <>
+    <div className="min-h-screen px-6 py-8 md:px-12 lg:px-16 background-sky-radial">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-10 lg:flex-row">
+        <aside className="soft-card hidden w-full max-w-xs flex-col gap-4 rounded-[28px] px-4 py-5 sm:px-5 sm:py-6 lg:sticky lg:top-10 lg:flex lg:h-fit lg:w-64 lg:gap-6 lg:self-start">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => (window.location.href = '/')}
+              aria-label="Back to kiosk"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.32)] transition hover:scale-[1.03]"
+            >
+              <AppIcon name="breadcrumbHome" size={18} />
+            </button>
+            <div className="text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/60">Back</p>
+              <button
+                type="button"
+                onClick={() => (window.location.href = '/')}
+                className="text-sm font-semibold text-slate-700 hover:text-primary"
+              >
+                Return to kiosk
+              </button>
+            </div>
+          </div>
+
+          <nav className="mt-6 flex w-full flex-col gap-2 rounded-[24px] border border-slate-200 bg-white/80 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+            {NAVIGATION.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                onClick={() => handleSelectTab(item.id)}
+                className={`flex w-full items-center gap-4 rounded-[20px] px-4 py-3 text-sm font-semibold transition-all ${
+                  activeTab === item.id
+                    ? 'bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.22)]'
+                    : 'bg-white/70 text-slate-500 hover:bg-primary/10 hover:text-primary'
+                }`}
+              >
+                <AppIcon name={item.icon} size={18} />
+                <span className="text-sm">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <Link
+            href="/admin/students"
+            aria-label="Manage students"
+            className="mt-4 flex w-full items-center gap-3 rounded-[20px] bg-white/70 px-4 py-3 text-sm font-semibold text-slate-500 transition hover:bg-primary/10 hover:text-primary"
+          >
+            <AppIcon name="manageStudents" size={18} />
+            Manage students
+          </Link>
+        </aside>
+
+        <div className="flex flex-1 flex-col gap-8">
+          <header className="soft-card rounded-[32px] py-5">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary/60">Dashboard · {activeNav?.label}</p>
+                  <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Kiosk Admin Overview</h1>
+                  <p className="mt-2 text-sm text-slate-500">Monitor daily sign-outs, student statuses, and archive history from one place.</p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {activeTab !== 'history' && (
+                    <Button
+                      onClick={() => setShowResetConfirm(true)}
+                      className="pill-button border border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary"
+                      variant="outline"
+                    >
+                      <AppIcon name="reset" size={16} />
+                      Reset Day
+                    </Button>
+                  )}
+                  <Button
+                    onClick={downloadDailyData}
+                    className="pill-button bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.26)] hover:bg-primary/90"
+                  >
+                    <AppIcon name="export" size={16} />
+                    Export CSV
+                  </Button>
+                </div>
+              </div>
+            </header>
+
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {metricCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-2xl border border-slate-200 bg-white/85 p-4 shadow-[0_10px_18px_rgba(54,92,255,0.06)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${card.badgeBg} ${card.badgeText}`}>
+                      <AppIcon name={card.icon} size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{card.label}</p>
+                      <p className="mt-2 text-2xl font-semibold text-slate-900">{card.value}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            {error && (
+              <div className="rounded-[24px] border border-rose-100 bg-rose-50/80 px-6 py-4 text-sm text-rose-600 shadow-[0_10px_24px_rgba(244,63,94,0.1)]">
+                {error}
+              </div>
+            )}
+
+            <section className="soft-card rounded-[32px] py-6">
+              {activeTab === 'records' && renderRecordsSection()}
+              {activeTab === 'students' && renderStudentsSection()}
+              {activeTab === 'history' && renderHistorySection()}
+            </section>
+          </div>
         </div>
       </div>
 
       {selectedSignature && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-2xl max-h-[80vh] overflow-auto shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Digital Signature</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+          <div className="soft-card mx-4 max-h-[85vh] w-full max-w-3xl overflow-hidden rounded-[32px] py-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Digital Signature</h3>
               <Button
                 onClick={() => setSelectedSignature(null)}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+                className="pill-button border border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary"
                 variant="outline"
               >
                 Close
               </Button>
             </div>
-            <img
-              src={selectedSignature || "/placeholder.svg"}
-              alt="Digital Signature"
-              className="max-w-full h-auto border border-gray-200 rounded"
-            />
-          </div>
-        </div>
-      )}
-
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-4 w-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Reset Day</h3>
-            <p className="text-sm text-gray-600 mb-4">Archive all of today's sign-outs to History and set every student back to Present?</p>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={()=>setShowResetConfirm(false)}>Cancel</Button>
-              <Button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white" disabled={resetting} onClick={async()=>{ setResetting(true); try { const res = await fetch('/api/reset-day',{method:'POST'}); const j= await res.json(); if(!res.ok) throw new Error(j.error||'Reset failed'); await fetchRecords(); await fetchStudents(); await fetchHistory(); setStudents(prev=>prev.map(s=>({...s, sign_out_records:[]}))); setSuccessMsg(`Day archived (${j.archived}) and statuses reset.`); setShowResetConfirm(false);} catch(e:any){ setErrorMsg(e.message);} finally { setResetting(false);} }}> {resetting? 'Resetting...' : 'Confirm'} </Button>
+            <div className="max-h-[65vh] overflow-auto rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
+              <img
+                src={selectedSignature || '/placeholder.svg'}
+                alt="Digital Signature"
+                className="mx-auto h-auto max-h-[55vh] w-full rounded-[16px] border border-slate-200 bg-white object-contain"
+              />
             </div>
           </div>
         </div>
       )}
 
-      {successMsg && (<div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow" onClick={()=>setSuccessMsg(null)}>{successMsg}</div>)}
-      {errorMsg && (<div className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow" onClick={()=>setErrorMsg(null)}>{errorMsg}</div>)}
-    </div>
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md">
+            <div className="soft-card rounded-[28px] bg-white px-6 py-6 shadow-[0_24px_45px_rgba(15,23,42,0.12)]">
+              <h3 className="text-xl font-semibold text-slate-900">Archive & Reset Day</h3>
+              <p className="mt-2 text-sm text-slate-500">
+                This will archive all current sign-outs into history and mark every student as present.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  variant="outline"
+                  className="pill-button flex-1 border border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary"
+                  onClick={() => setShowResetConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="pill-button flex-1 bg-primary text-white shadow-[0_12px_24px_rgba(54,92,255,0.26)] hover:bg-primary/90"
+                  disabled={resetting}
+                  onClick={async () => {
+                    setResetting(true)
+                    try {
+                      const res = await fetch('/api/reset-day', { method: 'POST' })
+                      const j = await res.json()
+                      if (!res.ok) throw new Error(j.error || 'Reset failed')
+                      await fetchRecords()
+                      await fetchStudents()
+                      await fetchHistory()
+                      setStudents((prev) => prev.map((s) => ({ ...s, sign_out_records: [] })))
+                      setSuccessMsg(`Day archived (${j.archived}) and statuses reset.`)
+                      setShowResetConfirm(false)
+                    } catch (e: any) {
+                      setErrorMsg(e.message)
+                    } finally {
+                      setResetting(false)
+                    }
+                  }}
+                >
+                  {resetting ? 'Resetting…' : 'Confirm Reset'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {successMsg && (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 cursor-pointer rounded-full border border-emerald-100 bg-white px-6 py-3 text-sm font-medium text-emerald-600 shadow-[0_12px_32px_rgba(16,185,129,0.18)]"
+          onClick={() => setSuccessMsg(null)}
+        >
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 cursor-pointer rounded-full border border-rose-100 bg-white px-6 py-3 text-sm font-medium text-rose-600 shadow-[0_12px_32px_rgba(244,63,94,0.18)]"
+          onClick={() => setErrorMsg(null)}
+        >
+          {errorMsg}
+        </div>
+      )}
+    </>
   )
 }
