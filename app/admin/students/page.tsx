@@ -327,7 +327,7 @@ export default function StudentManagement() {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">CSV Upload</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Format: Lastname, Firstname, class, subclass (one per line)
+                  Format: Last name, First name, class, subclass (one per line)
                   <br />
                   Example: Sturn, Ava, K, B (creates class "KB")
                   <br />
